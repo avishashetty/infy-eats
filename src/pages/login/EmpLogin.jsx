@@ -1,33 +1,44 @@
-// src/pages/employee/EmpLogin.jsx
+
+import bgImg from '../../assets/login.jpg';
 
 function EmpLogin() {
   return (
-    <div className="max-w-md mx-auto bg-white p-6 rounded shadow mt-10">
-      <h2 className="text-2xl font-bold mb-4 text-center">Employee Login</h2>
-      <form>
-        <div className="mb-4">
-          <label className="block mb-1 font-medium text-gray-700">Employee ID</label>
-          <input
-            type="text"
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-500"
-            placeholder="Enter your Employee ID"
-          />
-        </div>
-        <div className="mb-6">
-          <label className="block mb-1 font-medium text-gray-700">Password</label>
-          <input
-            type="password"
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-500"
-            placeholder="Enter your password"
-          />
-        </div>
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-        >
-          Login
-        </button>
-      </form>
+    <div className="fixed inset-0 min-h-screen min-w-full flex items-center justify-center z-0">
+      <div
+        className="absolute inset-0 h-full w-full bg-cover bg-center z-0"
+        style={{ backgroundImage: `url(${bgImg})` }}
+      ></div>
+      <div className="relative z-10 w-full max-w-md sm:p-10 p-4 rounded-2xl shadow-2xl bg-neutral-900/80 border border-white/20">
+        <h2 className="text-3xl sm:text-4xl font-extrabold mb-8 text-center text-white tracking-tight drop-shadow">Employee Login</h2>
+        <form>
+          <div className="mb-6">
+            <label className="block mb-2 font-semibold text-white">Employee ID</label>
+            <input
+              type="text"
+              className="w-full px-5 py-3 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a94438] bg-white/80 placeholder-gray-400 text-[#222] transition-all duration-200 shadow-sm focus:shadow-lg"
+              placeholder="Enter your Employee ID"
+            />
+          </div>
+          <div className="mb-8">
+            <label className="block mb-2 font-semibold text-white">Password</label>
+            <input
+              type="password"
+              className="w-full px-5 py-3 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a94438] bg-white/80 placeholder-gray-400 text-[#222] transition-all duration-200 shadow-sm focus:shadow-lg"
+              placeholder="Enter your password"
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-[#a94438] text-white py-3 rounded-xl font-bold text-lg shadow-lg hover:bg-[#4a3b3b] hover:text-white transition-all duration-200 border-0 focus:ring-2 focus:ring-[#a94438] focus:outline-none"
+          >
+            Login
+          </button>
+          <div className="mt-6 flex items-center justify-center">
+            <span className="inline-block w-3 h-3 rounded-full bg-[#4CAF50] mr-2"></span>
+            <span className="text-[#4CAF50] font-semibold">Fresh & Tasty!</span>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
