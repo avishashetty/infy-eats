@@ -18,6 +18,10 @@ import { useNavigate } from 'react-router-dom';
 
 function EmpHome() {
   const navigate = useNavigate();
+  const [isLoggedIn] = useState(() => {
+  return !!localStorage.getItem("employee");
+});
+
   // Animation state
   const heroRef = useRef(null);
   const canteenRef = useRef(null);
@@ -170,7 +174,7 @@ function EmpHome() {
               <p className="text-gray-600 mb-3">{canteen.desc}</p>
               <button
                 className="text-sm bg-[#a94438] text-white px-4 py-2 rounded hover:bg-[#4a3b3b] transition-transform duration-300 hover:scale-105"
-                onClick={() => navigate('/employee/menu')}
+                onClick={() => isLoggedIn ? navigate('/employee/menu') : navigate('/login/employee')}
               >
                 View Menu
               </button>
@@ -180,7 +184,7 @@ function EmpHome() {
         <div className="flex justify-center mt-8">
           <button
             className="px-6 py-2 rounded bg-[#a94438] text-white font-bold shadow hover:bg-[#4a3b3b] transition"
-            onClick={() => window.location.href = '/employee/canteen'}
+            onClick={() => isLoggedIn ? navigate('/employee/canteen') : navigate('/login/employee')}
           >
             See More
           </button>

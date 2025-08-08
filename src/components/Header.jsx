@@ -3,11 +3,6 @@ import logo from '../assets/homePage.jpg';
 import { FaShoppingCart, FaUserCircle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
-// Demo user data
-const demoUser = {
-  name: 'Avisha Shetty',
-  photo: '', // Empty string means no photo, fallback to icon
-};
 
 function useCountdown(targetDate) {
   const [timeLeft, setTimeLeft] = useState(targetDate - new Date());
@@ -26,10 +21,20 @@ function useCountdown(targetDate) {
 
 function Header() {
   const navigate = useNavigate();
-  // Demo: login state (replace with real auth logic)
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return !!localStorage.getItem("employee");
+  });
+
+  const [employee, setEmployee] = useState(() => {
+    const stored = localStorage.getItem("employee");
+    return stored ? JSON.parse(stored) : null;
+  });
+
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
+
+  // Store profile photo as a data URL
+  const [profilePhoto, setProfilePhoto] = useState(null);
 
 
   // Meal slots: [label, startHour, startMinute, endHour, endMinute]
@@ -96,12 +101,30 @@ function Header() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [profileOpen]);
 
+  useEffect(() => {
+    if (employee?.emp_id) {
+      fetch(`http://localhost:3000/api/employee/${employee.emp_id}/photo`)
+        .then((res) => {
+          if (!res.ok) throw new Error("No photo");
+          return res.blob();
+        })
+        .then((blob) => {
+          const url = URL.createObjectURL(blob);
+          setProfilePhoto(url);
+        })
+        .catch(() => setProfilePhoto(null));
+    }
+  }, [employee]);
+
   // Demo: handle login/logout
-  const handleLogin = () => setIsLoggedIn(true);
   const handleLogout = () => {
+    localStorage.removeItem("employee");
     setIsLoggedIn(false);
     setProfileOpen(false);
+    setEmployee(null);
+    navigate("/employee/home"); // Optional redirect
   };
+
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   return (
@@ -111,38 +134,39 @@ function Header() {
         <span className="text-xl font-extrabold tracking-tight">Infy Eats</span>
       </div>
       {/* Order Cut-off Timer: Only show current or next slot */}
-      { isLoggedIn &&
-      <div className="flex gap-3 items-center">
-        <div className="flex flex-col items-center px-2 animate-fadeIn">
-          <span className="text-xs font-bold text-[#FFD700]">{currentSlot.label}</span>
-          <span className="text-xs text-white/80">{currentSlot.window}</span>
-          <span className="text-xs bg-[#fff2] rounded px-2 py-0.5 font-mono tracking-wider mt-0.5">
-            {slotCountdown === 'Closed'
-              ? 'Closed'
-              : isActive
-                ? `Ends in ${slotCountdown}`
-                : `Starts in ${slotCountdown}`}
-          </span>
+      {isLoggedIn &&
+        <div className="flex gap-3 items-center">
+          <div className="flex flex-col items-center px-2 animate-fadeIn">
+            <span className="text-xs font-bold text-[#FFD700]">{currentSlot.label}</span>
+            <span className="text-xs text-white/80">{currentSlot.window}</span>
+            <span className="text-xs bg-[#fff2] rounded px-2 py-0.5 font-mono tracking-wider mt-0.5">
+              {slotCountdown === 'Closed'
+                ? 'Closed'
+                : isActive
+                  ? `Ends in ${slotCountdown}`
+                  : `Starts in ${slotCountdown}`}
+            </span>
+          </div>
         </div>
-      </div>
       }
       {/* Desktop Nav */}
       <nav className="hidden md:flex gap-6 items-center text-lg font-semibold">
         <a href="/employee/home" className="hover:text-[#4CAF50] transition">Home</a>
-        <a href="/employee/canteen" className="hover:text-[#4CAF50] transition">Canteens</a>
+        <a href={isLoggedIn ? "/employee/canteen" : "/login/employee"} className="hover:text-[#4CAF50] transition">Canteens</a>
         {isLoggedIn && (
           <div className="relative group flex items-center">
             <a href="/employee/carts" className="flex items-center justify-center text-xl hover:text-[#4CAF50] transition">
               <FaShoppingCart />
             </a>
-            <span className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 rounded bg-[#222] text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Cart</span>
+            <span className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 rounded bg-[#222] text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+              Cart</span>
           </div>
         )}
         {/* Auth logic: show Login or Profile */}
         {!isLoggedIn ? (
           <button
             className="ml-3 px-3 py-1 rounded bg-white text-[#a94438] font-bold hover:bg-[#4a3b3b] hover:text-white transition"
-            onClick={handleLogin}
+            onClick={() => navigate('/login/employee')}
           >
             Login
           </button>
@@ -153,19 +177,31 @@ function Header() {
               onClick={() => setProfileOpen((v) => !v)}
               aria-label="Profile"
             >
-              <FaUserCircle />
+              {profilePhoto ? (
+                <img
+                  src={profilePhoto}
+                  alt="Profile"
+                  className="h-12 w-12 rounded-full object-cover border-1 border-white"
+                />
+              ) : (
+                <FaUserCircle />
+              )}
             </button>
             {/* Dropdown */}
             {profileOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-white text-[#261a18] rounded-xl shadow-lg py-4 z-30 animate-fadeIn flex flex-col items-center">
-                {demoUser.photo ? (
-                  <img src={demoUser.photo} alt="Profile" className="h-16 w-16 rounded-full object-cover border-2 border-[#a94438] mb-2" />
+                {profilePhoto ? (
+                  <img
+                    src={profilePhoto}
+                    alt="Profile"
+                    className="h-16 w-16 rounded-full object-cover border-2 border-[#a94438] mb-2"
+                  />
                 ) : (
                   <span className="h-16 w-16 flex items-center justify-center rounded-full bg-gray-200 border-2 border-[#a94438] mb-2 text-4xl text-[#a94438]">
                     <FaUserCircle />
                   </span>
                 )}
-                <div className="font-bold text-lg mb-2">{demoUser.name}</div>
+                <div className="font-bold text-lg mb-2">{employee?.emp_name}</div>
                 <button
                   className="w-full px-6 py-2 hover:bg-[#f5e7e5] text-left transition text-left"
                   onClick={() => { setProfileOpen(false); navigate('/employee/orders'); }}
@@ -208,7 +244,7 @@ function Header() {
             </button>
             <nav className="flex flex-col bg-gradient-to-r from-[#5d1d15]/60 to-[#8b3125]/60 backdrop-blur-md shadow gap-6 mt-12 text-lg font-semibold items-center justify-center">
               <a href="/employee/home" className="hover:text-[#4CAF50] transition" onClick={() => setMobileMenuOpen(false)}>Home</a>
-              <a href="/employee/canteen" className="hover:text-[#4CAF50] transition" onClick={() => setMobileMenuOpen(false)}>Canteens</a>
+              <a href={isLoggedIn ? "/employee/canteen" : "/login/employee"} className="hover:text-[#4CAF50] transition" onClick={() => setMobileMenuOpen(false)}>Canteens</a>
               {isLoggedIn && (
                 <div className="relative group flex items-center">
                   <a href="/employee/carts" className="flex items-center justify-center text-xl hover:text-[#4CAF50] transition" onClick={() => setMobileMenuOpen(false)}>
@@ -221,7 +257,7 @@ function Header() {
               {!isLoggedIn ? (
                 <button
                   className="px-3 py-1 w-fit rounded bg-white text-[#a94438] font-bold hover:bg-[#4a3b3b] hover:text-white transition"
-                  onClick={() => { setMobileMenuOpen(false); handleLogin(); }}
+                  onClick={() => { setMobileMenuOpen(false); navigate('/login/employee'); }}
                 >
                   Login
                 </button>
@@ -232,19 +268,31 @@ function Header() {
                     onClick={() => setProfileOpen((v) => !v)}
                     aria-label="Profile"
                   >
-                    <FaUserCircle />
+                    {profilePhoto ? (
+                      <img
+                        src={profilePhoto}
+                        alt="Profile"
+                        className="h-12 w-12 rounded-full object-cover border-1 border-white"
+                      />
+                    ) : (
+                      <FaUserCircle />
+                    )}
                   </button>
                   {/* Dropdown */}
                   {profileOpen && (
                     <div className="absolute right-0 mt-2 w-56 bg-white text-[#261a18] rounded-xl shadow-lg py-4 z-30 animate-fadeIn flex flex-col items-center">
-                      {demoUser.photo ? (
-                        <img src={demoUser.photo} alt="Profile" className="h-16 w-16 rounded-full object-cover border-2 border-[#a94438] mb-2" />
+                      {profilePhoto ? (
+                        <img
+                          src={profilePhoto}
+                          alt="Profile"
+                          className="h-16 w-16 rounded-full object-cover border-2 border-[#a94438] mb-2"
+                        />
                       ) : (
                         <span className="h-16 w-16 flex items-center justify-center rounded-full bg-gray-200 border-2 border-[#a94438] mb-2 text-4xl text-[#a94438]">
                           <FaUserCircle />
                         </span>
                       )}
-                      <div className="font-bold text-lg mb-2">{demoUser.name}</div>
+                      <div className="font-bold text-lg mb-2">{employee?.emp_name}</div>
                       <button
                         className="w-full px-6 py-2 hover:bg-[#f5e7e5] text-left transition text-left"
                         onClick={() => { setProfileOpen(false); setMobileMenuOpen(false); navigate('/employee/orders'); }}
@@ -253,7 +301,8 @@ function Header() {
                       </button>
                       <a href="/employee/settings" className="w-full px-6 py-2 hover:bg-[#f5e7e5] text-left transition">Settings</a>
                       <button
-                        className="w-full px-6 py-2 text-left hover:bg-[#f5e7e5] transition text-[#a94438] font-bold"
+                        className="w-full px-6 py-2
+                         text-left hover:bg-[#f5e7e5] transition text-[#a94438] font-bold"
                         onClick={() => { setProfileOpen(false); setMobileMenuOpen(false); handleLogout(); }}
                       >
                         Logout
